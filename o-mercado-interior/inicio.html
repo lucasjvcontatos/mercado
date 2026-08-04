@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mercado — gerar convite</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<style>
+  :root{ --bg:#F6F3EC; --ink:#2B2A24; --muted:#7A7565; --line:#E4DFD1; --green:#4B5D3A; --green-dark:#384629; --red:#B5453A; }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;}
+  .wrap{max-width:380px;margin:60px auto;padding:0 16px;display:flex;flex-direction:column;gap:14px;}
+  h1{font-family:'Fraunces',serif;font-size:22px;color:var(--green-dark);margin:0;}
+  p.sub{margin:0;font-size:13px;color:var(--muted);line-height:1.5;}
+  .field label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;}
+  .field input{width:100%;font-family:'Inter',sans-serif;font-size:13.5px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;}
+  button{font-family:'Inter',sans-serif;cursor:pointer;border:none;border-radius:10px;font-weight:600;font-size:13.5px;}
+  .primary{background:var(--green);color:#fff;padding:11px 16px;width:100%;}
+  .primary:hover{background:var(--green-dark);}
+  #error{font-size:12.5px;color:var(--red);display:none;}
+  #result{display:none;background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;text-align:center;}
+  #result img, #qrBox{margin:0 auto 10px;}
+  #linkOut{word-break:break-all;font-size:11.5px;color:var(--muted);background:#F6F3EC;padding:8px;border-radius:8px;margin-top:8px;}
+  #expiraOut{font-size:12px;color:var(--muted);margin-top:6px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Gerar convite</h1>
+  <p class="sub">Só funciona se sua conta estiver na tabela <b>admins</b>. Gere na hora, na frente da pessoa, e mostre a tela com o QR.</p>
+
+  <div id="loginBox">
+    <div class="field"><label>Email (admin)</label><input type="email" id="adminEmail"></div>
+    <div class="field"><label>Senha</label><input type="password" id="adminPass"></div>
+    <button class="primary" id="loginBtn">Entrar</button>
+  </div>
+
+  <div id="genBox" style="display:none;">
+    <div class="field"><label>Validade (minutos)</label><input type="number" id="minutos" value="15" min="1"></div>
+    <button class="primary" id="genBtn">Gerar convite</button>
+  </div>
+
+  <div id="error"></div>
+
+  <div id="result">
+    <div id="qrBox"></div>
+    <div id="expiraOut"></div>
+    <div id="linkOut"></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://irmqtabhwoyccfjxstge.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_LloL7Ilv7ceXN8Ohj901VA_M9nQtYQp';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// >>> ajuste para a URL real onde o Mercado.html vai ficar hospedado <<<
+const MERCADO_URL = window.location.origin + window.location.pathname.replace('admin-convite.html', 'Mercado.html');
+
+const loginBox = document.getElementById('loginBox');
+const genBox = document.getElementById('genBox');
+const errorEl = document.getElementById('error');
+const resultEl = document.getElementById('result');
+
+async function checkSession(){
+  const { data: { session } } = await sb.auth.getSession();
+  if(session){
+    loginBox.style.display = 'none';
+    genBox.style.display = 'block';
+  }
+}
+checkSession();
+
+document.getElementById('loginBtn').addEventListener('click', async ()=>{
+  errorEl.style.display = 'none';
+  const email = document.getElementById('adminEmail').value.trim();
+  const password = document.getElementById('adminPass').value;
+  const { error } = await sb.auth.signInWithPassword({ email, password });
+  if(error){
+    errorEl.textContent = 'Login inválido.';
+    errorEl.style.display = 'block';
+    return;
+  }
+  checkSession();
+});
+
+document.getElementById('genBtn').addEventListener('click', async ()=>{
+  errorEl.style.display = 'none';
+  resultEl.style.display = 'none';
+  const minutos = parseInt(document.getElementById('minutos').value, 10) || 15;
+
+  const { data: token, error } = await sb.rpc('gerar_convite', { minutos_validade: minutos });
+  if(error || !token){
+    errorEl.textContent = error ? error.message : 'Não foi possível gerar o convite.';
+    errorEl.style.display = 'block';
+    return;
+  }
+
+  const link = `${MERCADO_URL}?convite=${token}`;
+
+  const qr = qrcode(0, 'M');
+  qr.addData(link);
+  qr.make();
+  document.getElementById('qrBox').innerHTML = qr.createSvgTag({ cellSize: 6, margin: 4 });
+
+  document.getElementById('expiraOut').textContent = `Válido por ${minutos} minuto(s).`;
+  document.getElementById('linkOut').textContent = link;
+  resultEl.style.display = 'block';
+});
+</script>
+</body>
+</html>
