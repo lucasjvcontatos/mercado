@@ -3,112 +3,521 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mercado — gerar convite</title>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<title>Mercado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
 <style>
-  :root{ --bg:#F6F3EC; --ink:#2B2A24; --muted:#7A7565; --line:#E4DFD1; --green:#4B5D3A; --green-dark:#384629; --red:#B5453A; }
+  :root{
+    --bg: #F6F3EC;
+    --card: #FFFFFF;
+    --ink: #2B2A24;
+    --muted: #7A7565;
+    --line: #E4DFD1;
+    --green: #4B5D3A;
+    --green-dark: #384629;
+    --clay: #B5673A;
+    --red: #B5453A;
+    --radius: 12px;
+  }
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',sans-serif;}
-  .wrap{max-width:380px;margin:60px auto;padding:0 16px;display:flex;flex-direction:column;gap:14px;}
-  h1{font-family:'Fraunces',serif;font-size:22px;color:var(--green-dark);margin:0;}
-  p.sub{margin:0;font-size:13px;color:var(--muted);line-height:1.5;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,.display{font-family:'Fraunces',serif;}
+
+  header.top{
+    padding:26px clamp(16px,4vw,40px) 20px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  header.top h1{margin:0;font-size:26px;font-weight:600;color:var(--green-dark);}
+  header.top p{margin:4px 0 0;font-size:13.5px;color:var(--muted);}
+  #logoutBtn{
+    background:none;border:1px solid var(--line);color:var(--muted);
+    padding:8px 14px;border-radius:10px;font-size:12.5px;cursor:pointer;font-weight:600;
+  }
+  #logoutBtn:hover{color:var(--red);border-color:var(--red);}
+
+  main{padding:22px clamp(16px,4vw,40px) 60px;max-width:900px;margin:0 auto;}
+
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px;}
+  input[type="text"], input[type="email"], input[type="password"], input[type="number"], select{
+    font-family:'Inter',sans-serif;font-size:13.5px;padding:10px 12px;
+    border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);
+  }
+  #searchBox{flex:1;min-width:160px;}
+  #categoryFilter{min-width:160px;}
+
+  button{
+    font-family:'Inter',sans-serif;cursor:pointer;border:none;border-radius:10px;
+    font-weight:600;font-size:13.5px;
+  }
+  .btn-add{background:var(--green);color:#fff;padding:10px 16px;}
+  .btn-add:hover{background:var(--green-dark);}
+
+  .empty{
+    text-align:center;color:var(--muted);font-size:13.5px;padding:60px 10px;
+    border:1.5px dashed var(--line);border-radius:var(--radius);
+  }
+
+  .list{display:flex;flex-direction:column;gap:10px;}
+  .item{
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 16px;display:flex;justify-content:space-between;gap:12px;
+  }
+  .item .info{flex:1;min-width:0;}
+  .item .row1{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .item .name{font-family:'Fraunces',serif;font-size:16px;font-weight:600;color:var(--ink);}
+  .tag{
+    font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;
+    background:#EFEAD9;color:var(--green-dark);white-space:nowrap;
+  }
+  .item .meta{margin-top:5px;font-size:13px;color:var(--muted);line-height:1.5;}
+  .item .meta b{color:var(--ink);font-weight:600;}
+  .item .obs{margin-top:6px;font-size:12.5px;color:var(--clay);font-style:italic;}
+  .item-actions{display:flex;flex-direction:column;gap:6px;}
+  .item-actions button{background:none;padding:4px 8px;font-size:12px;color:var(--muted);}
+  .item-actions button:hover{color:var(--green-dark);}
+
+  /* modal genérico (item e gate de acesso) */
+  .overlay{
+    position:fixed;inset:0;background:rgba(43,42,36,0.45);display:none;
+    align-items:center;justify-content:center;z-index:50;padding:16px;
+  }
+  .overlay.open{display:flex;}
+  .modal{
+    background:#fff;border-radius:16px;padding:22px;width:100%;max-width:420px;
+    display:flex;flex-direction:column;gap:12px;
+  }
+  .modal h3{margin:0;font-size:18px;color:var(--green-dark);}
   .field label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;}
-  .field input{width:100%;font-family:'Inter',sans-serif;font-size:13.5px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;}
-  button{font-family:'Inter',sans-serif;cursor:pointer;border:none;border-radius:10px;font-weight:600;font-size:13.5px;}
-  .primary{background:var(--green);color:#fff;padding:11px 16px;width:100%;}
-  .primary:hover{background:var(--green-dark);}
-  #error{font-size:12.5px;color:var(--red);display:none;}
-  #result{display:none;background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;text-align:center;}
-  #result img, #qrBox{margin:0 auto 10px;}
-  #linkOut{word-break:break-all;font-size:11.5px;color:var(--muted);background:#F6F3EC;padding:8px;border-radius:8px;margin-top:8px;}
-  #expiraOut{font-size:12px;color:var(--muted);margin-top:6px;}
+  .field input, .field select, .field textarea{width:100%;font-family:'Inter',sans-serif;}
+  .field textarea{resize:vertical;min-height:56px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px;}
+  .btn-cancel{background:none;color:var(--muted);padding:9px 12px;}
+  .btn-cancel:hover{color:var(--ink);}
+  .btn-save{background:var(--green);color:#fff;padding:9px 16px;}
+  .btn-save:hover{background:var(--green-dark);}
+  .btn-danger{background:none;color:var(--red);padding:9px 12px;margin-right:auto;}
+  .btn-danger:hover{text-decoration:underline;}
+
+  /* telas de acesso (login / cadastro por convite / bloqueio) */
+  #gate{
+    max-width:380px;margin:80px auto;padding:0 16px;
+    display:flex;flex-direction:column;gap:14px;
+  }
+  #gate h2{margin:0 0 2px;font-size:22px;color:var(--green-dark);}
+  #gate p.sub{margin:0;font-size:13.5px;color:var(--muted);line-height:1.5;}
+  #gate .field{width:100%;}
+  #gateError{font-size:12.5px;color:var(--red);display:none;}
+  #gateMsg{font-size:12.5px;color:var(--green-dark);display:none;}
+  #gate button.primary{background:var(--green);color:#fff;padding:11px 16px;width:100%;}
+  #gate button.primary:hover{background:var(--green-dark);}
+  #gate button.link{background:none;color:var(--muted);padding:4px;font-size:12.5px;text-decoration:underline;}
+  #loadingScreen{text-align:center;padding:100px 20px;color:var(--muted);font-size:13.5px;}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Gerar convite</h1>
-  <p class="sub">Só funciona se sua conta estiver na tabela <b>admins</b>. Gere na hora, na frente da pessoa, e mostre a tela com o QR.</p>
 
-  <div id="loginBox">
-    <div class="field"><label>Email (admin)</label><input type="email" id="adminEmail"></div>
-    <div class="field"><label>Senha</label><input type="password" id="adminPass"></div>
-    <button class="primary" id="loginBtn">Entrar</button>
-  </div>
+<div id="loadingScreen">Carregando…</div>
 
-  <div id="genBox" style="display:none;">
-    <div class="field"><label>Validade (minutos)</label><input type="number" id="minutos" value="15" min="1"></div>
-    <button class="primary" id="genBtn">Gerar convite</button>
-  </div>
+<!-- ===== GATE: login / cadastro por convite / bloqueado ===== -->
+<div id="gate" style="display:none;"></div>
 
-  <div id="error"></div>
+<!-- ===== APP (só aparece depois de aprovado) ===== -->
+<div id="app" style="display:none;">
+  <header class="top">
+    <div>
+      <h1>Mercado</h1>
+      <p>Catálogo de gente de confiança que vende coisas da roça</p>
+    </div>
+    <button id="logoutBtn">Sair</button>
+  </header>
 
-  <div id="result">
-    <div id="qrBox"></div>
-    <div id="expiraOut"></div>
-    <div id="linkOut"></div>
+  <main>
+    <div class="toolbar">
+      <input type="text" id="searchBox" placeholder="Buscar por nome, contato ou região...">
+      <select id="categoryFilter">
+        <option value="">Todas as categorias</option>
+      </select>
+      <button class="btn-add" id="openAdd">+ Adicionar</button>
+    </div>
+
+    <div class="list" id="list"></div>
+  </main>
+</div>
+
+<!-- Modal: add/edit -->
+<div class="overlay" id="itemOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">Novo contato</h3>
+    <div class="field">
+      <label>Nome</label>
+      <input type="text" id="fName" placeholder="Ex: Seu Zé que vende mel">
+    </div>
+    <div class="field">
+      <label>Categoria</label>
+      <select id="fCategory">
+        <option value="Mel">Mel</option>
+        <option value="Leite">Leite</option>
+        <option value="Ovos">Ovos</option>
+        <option value="Queijo">Queijo / laticínios</option>
+        <option value="Carne">Carne</option>
+        <option value="Banha">Banha</option>
+        <option value="Ossos">Ossos (açougue)</option>
+        <option value="Frutas e verduras">Frutas e verduras</option>
+        <option value="Outro">Outro</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Contato (telefone/WhatsApp/Instagram)</label>
+      <input type="text" id="fContact" placeholder="(34) 9....">
+    </div>
+    <div class="field">
+      <label>Endereço / região</label>
+      <input type="text" id="fAddress" placeholder="Bairro, distrito, referência...">
+    </div>
+    <div class="field">
+      <label>Observações</label>
+      <textarea id="fNotes" placeholder="Ex: Detalhes, indicação de Marco, produto sem conservante, só vende aos sábados..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-danger" id="deleteItem" style="display:none;">Excluir</button>
+      <button class="btn-cancel" id="cancelItem">Cancelar</button>
+      <button class="btn-save" id="saveItem">Salvar</button>
+    </div>
   </div>
 </div>
 
 <script>
+// ====== CONFIG SUPABASE ======
 const SUPABASE_URL = 'https://irmqtabhwoyccfjxstge.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_LloL7Ilv7ceXN8Ohj901VA_M9nQtYQp';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// >>> ajuste para a URL real onde o Mercado.html vai ficar hospedado <<<
-const MERCADO_URL = window.location.origin + window.location.pathname.replace('admin-convite.html', 'Mercado.html');
+const CATEGORIES = ['Mel','Leite','Ovos','Queijo','Carne','Banha','Ossos','Frutas e verduras','Outro'];
 
-const loginBox = document.getElementById('loginBox');
-const genBox = document.getElementById('genBox');
-const errorEl = document.getElementById('error');
-const resultEl = document.getElementById('result');
+const gateEl = document.getElementById('gate');
+const appEl = document.getElementById('app');
+const loadingEl = document.getElementById('loadingScreen');
 
-async function checkSession(){
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str || '';
+  return d.innerHTML;
+}
+
+// ====================================================================
+// GATE — decide o que mostrar: login, cadastro via convite, ou bloqueio
+// ====================================================================
+async function boot(){
+  loadingEl.style.display = 'block';
+  gateEl.style.display = 'none';
+  appEl.style.display = 'none';
+
   const { data: { session } } = await sb.auth.getSession();
-  if(session){
-    loginBox.style.display = 'none';
-    genBox.style.display = 'block';
+
+  if(!session){
+    loadingEl.style.display = 'none';
+    const params = new URLSearchParams(window.location.search);
+    const convite = params.get('convite');
+    if(convite){
+      renderSignupGate(convite);
+    } else {
+      renderLoginGate();
+    }
+    return;
+  }
+
+  const { data: aprovado, error } = await sb.rpc('sou_aprovado');
+  if(error || !aprovado){
+    loadingEl.style.display = 'none';
+    renderBlockedGate();
+    return;
+  }
+
+  loadingEl.style.display = 'none';
+  gateEl.style.display = 'none';
+  appEl.style.display = 'block';
+  initApp();
+}
+
+function renderLoginGate(){
+  gateEl.style.display = 'flex';
+  gateEl.innerHTML = `
+    <h2>Mercado</h2>
+    <p class="sub">Acesso só por convite. Se você já tem conta, entre abaixo.</p>
+    <div class="field"><label>Email</label><input type="email" id="loginEmail"></div>
+    <div class="field"><label>Senha</label><input type="password" id="loginPass"></div>
+    <div id="gateError"></div>
+    <button class="primary" id="loginBtn">Entrar</button>
+  `;
+  document.getElementById('loginBtn').addEventListener('click', async ()=>{
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPass').value;
+    const errEl = document.getElementById('gateError');
+    errEl.style.display = 'none';
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if(error){
+      errEl.textContent = 'Email ou senha incorretos.';
+      errEl.style.display = 'block';
+      return;
+    }
+    boot();
+  });
+}
+
+function renderSignupGate(token){
+  gateEl.style.display = 'flex';
+  gateEl.innerHTML = `<p class="sub">Verificando convite…</p>`;
+
+  sb.rpc('validar_convite', { p_token: token }).then(({ data: valido, error })=>{
+    if(error || !valido){
+      gateEl.innerHTML = `
+        <h2>Convite inválido</h2>
+        <p class="sub">Esse link já foi usado, expirou, ou não existe. Peça um novo convite presencialmente.</p>
+      `;
+      return;
+    }
+
+    gateEl.innerHTML = `
+      <h2>Criar acesso</h2>
+      <p class="sub">Convite válido. Crie seu login para acessar o catálogo.</p>
+      <div class="field"><label>Email</label><input type="email" id="suEmail"></div>
+      <div class="field"><label>Senha (mínimo 6 caracteres)</label><input type="password" id="suPass"></div>
+      <div id="gateError"></div>
+      <button class="primary" id="suBtn">Criar conta e entrar</button>
+    `;
+
+    document.getElementById('suBtn').addEventListener('click', async ()=>{
+      const email = document.getElementById('suEmail').value.trim();
+      const password = document.getElementById('suPass').value;
+      const errEl = document.getElementById('gateError');
+      errEl.style.display = 'none';
+
+      const { data: signUpData, error: signUpErr } = await sb.auth.signUp({ email, password });
+      if(signUpErr){
+        errEl.textContent = signUpErr.message;
+        errEl.style.display = 'block';
+        return;
+      }
+
+      // se "Confirm email" estiver ligado no projeto, não haverá sessão aqui ainda
+      if(!signUpData.session){
+        gateEl.innerHTML = `
+          <h2>Quase lá</h2>
+          <p class="sub">Confirme seu email pelo link que enviamos, depois volte
+          e entre normalmente na tela de login.</p>
+        `;
+        return;
+      }
+
+      const { data: confirmado, error: confErr } = await sb.rpc('confirmar_convite', { p_token: token });
+      if(confErr || !confirmado){
+        gateEl.innerHTML = `
+          <h2>Convite não confirmado</h2>
+          <p class="sub">Sua conta foi criada, mas o convite não pôde ser validado
+          (pode ter expirado nesse meio tempo). Fale com quem te convidou.</p>
+        `;
+        return;
+      }
+
+      boot();
+    });
+  });
+}
+
+function renderBlockedGate(){
+  gateEl.style.display = 'flex';
+  gateEl.innerHTML = `
+    <h2>Acesso pendente</h2>
+    <p class="sub">Sua conta existe, mas ainda não foi aprovada para ver o catálogo.
+    Fale com quem administra o Mercado.</p>
+    <button class="link" id="signOutBlocked">Sair</button>
+  `;
+  document.getElementById('signOutBlocked').addEventListener('click', async ()=>{
+    await sb.auth.signOut();
+    boot();
+  });
+}
+
+document.getElementById('logoutBtn')?.addEventListener('click', async ()=>{
+  await sb.auth.signOut();
+  boot();
+});
+
+// ====================================================================
+// APP — catálogo em si (agora lendo/escrevendo no Supabase)
+// ====================================================================
+let items = [];
+let realtimeChannel = null;
+
+function initApp(){
+  const categoryFilter = document.getElementById('categoryFilter');
+  categoryFilter.innerHTML = '<option value="">Todas as categorias</option>';
+  CATEGORIES.forEach(c=>{
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    categoryFilter.appendChild(opt);
+  });
+
+  document.getElementById('searchBox').addEventListener('input', render);
+  categoryFilter.addEventListener('change', render);
+  document.getElementById('openAdd').addEventListener('click', ()=> openModal(null));
+  document.getElementById('cancelItem').addEventListener('click', ()=> itemOverlay.classList.remove('open'));
+  document.getElementById('saveItem').addEventListener('click', saveItemHandler);
+  deleteItemBtn.addEventListener('click', deleteItemHandler);
+
+  loadItems();
+
+  // sincroniza em tempo real com o que outras pessoas aprovadas fizerem
+  if(realtimeChannel) sb.removeChannel(realtimeChannel);
+  realtimeChannel = sb
+    .channel('contatos-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'contatos' }, loadItems)
+    .subscribe();
+}
+
+async function loadItems(){
+  const { data, error } = await sb.from('contatos').select('*').order('name', { ascending: true });
+  if(!error) items = data;
+  render();
+}
+
+const list = document.getElementById('list');
+const searchBox = document.getElementById('searchBox');
+const categoryFilter = document.getElementById('categoryFilter');
+
+function render(){
+  const term = searchBox.value.trim().toLowerCase();
+  const cat = categoryFilter.value;
+
+  const filtered = items.filter(it=>{
+    const matchesCat = !cat || it.category === cat;
+    const haystack = (it.name+' '+(it.contact||'')+' '+(it.address||'')).toLowerCase();
+    const matchesTerm = !term || haystack.includes(term);
+    return matchesCat && matchesTerm;
+  });
+
+  list.innerHTML = '';
+
+  if(filtered.length === 0){
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = items.length === 0
+      ? 'Nenhum contato ainda. Clique em "+ Adicionar" para começar seu catálogo.'
+      : 'Nenhum contato encontrado com esse filtro.';
+    list.appendChild(empty);
+    return;
+  }
+
+  filtered.forEach(it=>{
+    const row = document.createElement('div');
+    row.className = 'item';
+    row.innerHTML = `
+      <div class="info">
+        <div class="row1">
+          <span class="name">${escapeHtml(it.name)}</span>
+          <span class="tag">${escapeHtml(it.category)}</span>
+        </div>
+        <div class="meta">
+          ${it.contact ? `<b>Contato:</b> ${escapeHtml(it.contact)}<br>` : ''}
+          ${it.address ? `<b>Onde:</b> ${escapeHtml(it.address)}` : ''}
+        </div>
+        ${it.notes ? `<div class="obs">${escapeHtml(it.notes)}</div>` : ''}
+      </div>
+      <div class="item-actions">
+        <button data-edit="${it.id}" title="Editar">✎ Editar</button>
+        <button data-del="${it.id}" title="Excluir">✕ Excluir</button>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+
+  list.querySelectorAll('[data-edit]').forEach(b=>{
+    b.addEventListener('click', ()=> openModal(b.dataset.edit));
+  });
+  list.querySelectorAll('[data-del]').forEach(b=>{
+    b.addEventListener('click', async ()=> {
+      if(confirm('Excluir este contato?')){
+        await sb.from('contatos').delete().eq('id', b.dataset.del);
+        loadItems();
+      }
+    });
+  });
+}
+
+const itemOverlay = document.getElementById('itemOverlay');
+const modalTitle = document.getElementById('modalTitle');
+const fName = document.getElementById('fName');
+const fCategory = document.getElementById('fCategory');
+const fContact = document.getElementById('fContact');
+const fAddress = document.getElementById('fAddress');
+const fNotes = document.getElementById('fNotes');
+const deleteItemBtn = document.getElementById('deleteItem');
+let editingId = null;
+
+function openModal(id){
+  editingId = id || null;
+  if(id){
+    const it = items.find(i=>i.id===id);
+    modalTitle.textContent = 'Editar contato';
+    fName.value = it.name;
+    fCategory.value = it.category;
+    fContact.value = it.contact || '';
+    fAddress.value = it.address || '';
+    fNotes.value = it.notes || '';
+    deleteItemBtn.style.display = 'inline-block';
+  } else {
+    modalTitle.textContent = 'Novo contato';
+    fName.value = ''; fCategory.value = CATEGORIES[0];
+    fContact.value = ''; fAddress.value = ''; fNotes.value = '';
+    deleteItemBtn.style.display = 'none';
+  }
+  itemOverlay.classList.add('open');
+  fName.focus();
+}
+
+async function saveItemHandler(){
+  const name = fName.value.trim();
+  if(!name){ fName.focus(); return; }
+
+  const payload = {
+    name,
+    category: fCategory.value,
+    contact: fContact.value.trim(),
+    address: fAddress.value.trim(),
+    notes: fNotes.value.trim()
+  };
+
+  if(editingId){
+    await sb.from('contatos').update(payload).eq('id', editingId);
+  } else {
+    await sb.from('contatos').insert(payload);
+  }
+  itemOverlay.classList.remove('open');
+  loadItems();
+}
+
+async function deleteItemHandler(){
+  if(editingId && confirm('Excluir este contato?')){
+    await sb.from('contatos').delete().eq('id', editingId);
+    itemOverlay.classList.remove('open');
+    loadItems();
   }
 }
-checkSession();
 
-document.getElementById('loginBtn').addEventListener('click', async ()=>{
-  errorEl.style.display = 'none';
-  const email = document.getElementById('adminEmail').value.trim();
-  const password = document.getElementById('adminPass').value;
-  const { error } = await sb.auth.signInWithPassword({ email, password });
-  if(error){
-    errorEl.textContent = 'Login inválido.';
-    errorEl.style.display = 'block';
-    return;
-  }
-  checkSession();
-});
-
-document.getElementById('genBtn').addEventListener('click', async ()=>{
-  errorEl.style.display = 'none';
-  resultEl.style.display = 'none';
-  const minutos = parseInt(document.getElementById('minutos').value, 10) || 15;
-
-  const { data: token, error } = await sb.rpc('gerar_convite', { minutos_validade: minutos });
-  if(error || !token){
-    errorEl.textContent = error ? error.message : 'Não foi possível gerar o convite.';
-    errorEl.style.display = 'block';
-    return;
-  }
-
-  const link = `${MERCADO_URL}?convite=${token}`;
-
-  const qr = qrcode(0, 'M');
-  qr.addData(link);
-  qr.make();
-  document.getElementById('qrBox').innerHTML = qr.createSvgTag({ cellSize: 6, margin: 4 });
-
-  document.getElementById('expiraOut').textContent = `Válido por ${minutos} minuto(s).`;
-  document.getElementById('linkOut').textContent = link;
-  resultEl.style.display = 'block';
-});
+sb.auth.onAuthStateChange(()=> boot());
+boot();
 </script>
 </body>
 </html>
