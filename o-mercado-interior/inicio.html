@@ -6,6 +6,7 @@
 <title>Mercado</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
     --bg: #F6F3EC;
@@ -16,6 +17,7 @@
     --green: #4B5D3A;
     --green-dark: #384629;
     --clay: #B5673A;
+    --red: #B5453A;
     --radius: 12px;
   }
   *{box-sizing:border-box;}
@@ -27,22 +29,6 @@
     -webkit-font-smoothing:antialiased;
   }
   h1,h2,.display{font-family:'Fraunces',serif;}
-
-  header.top{
-    padding:26px clamp(16px,4vw,40px) 20px;
-    border-bottom:1px solid var(--line);
-  }
-  header.top h1{
-    margin:0;
-    font-size:26px;
-    font-weight:600;
-    color:var(--green-dark);
-  }
-  header.top p{
-    margin:4px 0 0;
-    font-size:13.5px;
-    color:var(--muted);
-  }
 
 
   header{
@@ -59,186 +45,135 @@ header img{
     display:block;
 }
 
-  main{
-    padding:22px clamp(16px,4vw,40px) 60px;
-    max-width:900px;
-    margin:0 auto;
-  }
 
-  .toolbar{
+  header.top{
+    padding:26px clamp(16px,4vw,40px) 20px;
+    border-bottom:1px solid var(--line);
     display:flex;
-    gap:10px;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
     flex-wrap:wrap;
-    align-items:center;
-    margin-bottom:18px;
   }
-  input[type="text"], select{
-    font-family:'Inter',sans-serif;
-    font-size:13.5px;
-    padding:10px 12px;
-    border:1px solid var(--line);
-    border-radius:10px;
-    background:#fff;
-    color:var(--ink);
+  header.top h1{margin:0;font-size:26px;font-weight:600;color:var(--green-dark);}
+  header.top p{margin:4px 0 0;font-size:13.5px;color:var(--muted);}
+  #logoutBtn{
+    background:none;border:1px solid var(--line);color:var(--muted);
+    padding:8px 14px;border-radius:10px;font-size:12.5px;cursor:pointer;font-weight:600;
+  }
+  #logoutBtn:hover{color:var(--red);border-color:var(--red);}
+
+  main{padding:22px clamp(16px,4vw,40px) 60px;max-width:900px;margin:0 auto;}
+
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px;}
+  input[type="text"], input[type="email"], input[type="password"], input[type="number"], select{
+    font-family:'Inter',sans-serif;font-size:13.5px;padding:10px 12px;
+    border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);
   }
   #searchBox{flex:1;min-width:160px;}
   #categoryFilter{min-width:160px;}
 
   button{
-    font-family:'Inter',sans-serif;
-    cursor:pointer;
-    border:none;
-    border-radius:10px;
-    font-weight:600;
-    font-size:13.5px;
+    font-family:'Inter',sans-serif;cursor:pointer;border:none;border-radius:10px;
+    font-weight:600;font-size:13.5px;
   }
-  .btn-add{
-    background:var(--green);
-    color:#fff;
-    padding:10px 16px;
-  }
+  .btn-add{background:var(--green);color:#fff;padding:10px 16px;}
   .btn-add:hover{background:var(--green-dark);}
 
   .empty{
-    text-align:center;
-    color:var(--muted);
-    font-size:13.5px;
-    padding:60px 10px;
-    border:1.5px dashed var(--line);
-    border-radius:var(--radius);
+    text-align:center;color:var(--muted);font-size:13.5px;padding:60px 10px;
+    border:1.5px dashed var(--line);border-radius:var(--radius);
   }
 
-  .list{
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-  }
+  .list{display:flex;flex-direction:column;gap:10px;}
   .item{
-    background:var(--card);
-    border:1px solid var(--line);
-    border-radius:var(--radius);
-    padding:14px 16px;
-    display:flex;
-    justify-content:space-between;
-    gap:12px;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px 16px;display:flex;justify-content:space-between;gap:12px;
   }
   .item .info{flex:1;min-width:0;}
-  .item .row1{
-    display:flex;
-    align-items:center;
-    gap:8px;
-    flex-wrap:wrap;
-  }
-  .item .name{
-    font-family:'Fraunces',serif;
-    font-size:16px;
-    font-weight:600;
-    color:var(--ink);
-  }
+  .item .row1{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .item .name{font-family:'Fraunces',serif;font-size:16px;font-weight:600;color:var(--ink);}
   .tag{
-    font-size:11px;
-    font-weight:600;
-    padding:3px 9px;
-    border-radius:20px;
-    background:#EFEAD9;
-    color:var(--green-dark);
-    white-space:nowrap;
+    font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;
+    background:#EFEAD9;color:var(--green-dark);white-space:nowrap;
   }
-  .item .meta{
-    margin-top:5px;
-    font-size:13px;
-    color:var(--muted);
-    line-height:1.5;
-  }
+  .item .meta{margin-top:5px;font-size:13px;color:var(--muted);line-height:1.5;}
   .item .meta b{color:var(--ink);font-weight:600;}
-  .item .obs{
-    margin-top:6px;
-    font-size:12.5px;
-    color:var(--clay);
-    font-style:italic;
-  }
-  .item-actions{
-    display:flex;
-    flex-direction:column;
-    gap:6px;
-  }
-  .item-actions button{
-    background:none;
-    padding:4px 8px;
-    font-size:12px;
-    color:var(--muted);
-  }
+  .item .obs{margin-top:6px;font-size:12.5px;color:var(--clay);font-style:italic;}
+  .item-actions{display:flex;flex-direction:column;gap:6px;}
+  .item-actions button{background:none;padding:4px 8px;font-size:12px;color:var(--muted);}
   .item-actions button:hover{color:var(--green-dark);}
 
-  /* modal */
+  /* modal genérico (item e gate de acesso) */
   .overlay{
-    position:fixed;inset:0;
-    background:rgba(43,42,36,0.45);
-    display:none;
-    align-items:center;justify-content:center;
-    z-index:50;
-    padding:16px;
+    position:fixed;inset:0;background:rgba(43,42,36,0.45);display:none;
+    align-items:center;justify-content:center;z-index:50;padding:16px;
   }
   .overlay.open{display:flex;}
   .modal{
-    background:#fff;
-    border-radius:16px;
-    padding:22px;
-    width:100%;
-    max-width:420px;
-    display:flex;
-    flex-direction:column;
-    gap:12px;
+    background:#fff;border-radius:16px;padding:22px;width:100%;max-width:420px;
+    display:flex;flex-direction:column;gap:12px;
   }
   .modal h3{margin:0;font-size:18px;color:var(--green-dark);}
-  .field label{
-    display:block;
-    font-size:12px;
-    font-weight:600;
-    color:var(--muted);
-    margin-bottom:4px;
-  }
-  .field input, .field select, .field textarea{
-    width:100%;
-    font-family:'Inter',sans-serif;
-  }
+  .field label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px;}
+  .field input, .field select, .field textarea{width:100%;font-family:'Inter',sans-serif;}
   .field textarea{resize:vertical;min-height:56px;}
-  .modal-actions{
-    display:flex;
-    justify-content:flex-end;
-    gap:8px;
-    margin-top:4px;
-  }
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:4px;}
   .btn-cancel{background:none;color:var(--muted);padding:9px 12px;}
   .btn-cancel:hover{color:var(--ink);}
   .btn-save{background:var(--green);color:#fff;padding:9px 16px;}
   .btn-save:hover{background:var(--green-dark);}
-  .btn-danger{background:none;color:#B5453A;padding:9px 12px;margin-right:auto;}
+  .btn-danger{background:none;color:var(--red);padding:9px 12px;margin-right:auto;}
   .btn-danger:hover{text-decoration:underline;}
+
+  /* telas de acesso (login / cadastro por convite / bloqueio) */
+  #gate{
+    max-width:380px;margin:80px auto;padding:0 16px;
+    display:flex;flex-direction:column;gap:14px;
+  }
+  #gate h2{margin:0 0 2px;font-size:22px;color:var(--green-dark);}
+  #gate p.sub{margin:0;font-size:13.5px;color:var(--muted);line-height:1.5;}
+  #gate .field{width:100%;}
+  #gateError{font-size:12.5px;color:var(--red);display:none;}
+  #gateMsg{font-size:12.5px;color:var(--green-dark);display:none;}
+  #gate button.primary{background:var(--green);color:#fff;padding:11px 16px;width:100%;}
+  #gate button.primary:hover{background:var(--green-dark);}
+  #gate button.link{background:none;color:var(--muted);padding:4px;font-size:12.5px;text-decoration:underline;}
+  #loadingScreen{text-align:center;padding:100px 20px;color:var(--muted);font-size:13.5px;}
 </style>
 </head>
 <body>
 
-<header class="top">
+<div id="loadingScreen">Carregando…</div>
 
-  <img src="imagemprincipal.png" alt="Logo">
+<!-- ===== GATE: login / cadastro por convite / bloqueado ===== -->
+<div id="gate" style="display:none;"></div>
 
-  <h1>Mercado</h1>
-  <p>Catálogo de gente de confiança que vende coisas da roça</p
+<!-- ===== APP (só aparece depois de aprovado) ===== -->
+<div id="app" style="display:none;">
+  <header class="top">
 
-</header>
+<img src="imagemprincipal.png" alt="Mercado do Interior">
 
-<main>
-  <div class="toolbar">
-    <input type="text" id="searchBox" placeholder="Buscar por nome, contato ou região...">
-    <select id="categoryFilter">
-      <option value="">Todas as categorias</option>
-    </select>
-    <button class="btn-add" id="openAdd">+ Adicionar</button>
-  </div>
+    <div>
+      <h1>Mercado</h1>
+      <p>Catálogo de gente de confiança que vende coisas da roça</p>
+    </div>
+    <button id="logoutBtn">Sair</button>
+  </header>
 
-  <div class="list" id="list"></div>
-</main>
+  <main>
+    <div class="toolbar">
+      <input type="text" id="searchBox" placeholder="Buscar por nome, contato ou região...">
+      <select id="categoryFilter">
+        <option value="">Todas as categorias</option>
+      </select>
+      <button class="btn-add" id="openAdd">+ Adicionar</button>
+    </div>
+
+    <div class="list" id="list"></div>
+  </main>
+</div>
 
 <!-- Modal: add/edit -->
 <div class="overlay" id="itemOverlay">
@@ -263,7 +198,7 @@ header img{
       </select>
     </div>
     <div class="field">
-      <label>Contato (telefone/WhatsApp/)</label>
+      <label>Contato (telefone/WhatsApp/Instagram)</label>
       <input type="text" id="fContact" placeholder="(34) 9....">
     </div>
     <div class="field">
@@ -272,7 +207,7 @@ header img{
     </div>
     <div class="field">
       <label>Observações</label>
-      <textarea id="fNotes" placeholder="Ex: indicação de fulano, produto sem conservante, só vende aos sábados..."></textarea>
+      <textarea id="fNotes" placeholder="Ex: Detalhes, indicação de Marco, produto sem conservante, só vende aos sábados..."></textarea>
     </div>
     <div class="modal-actions">
       <button class="btn-danger" id="deleteItem" style="display:none;">Excluir</button>
@@ -283,39 +218,203 @@ header img{
 </div>
 
 <script>
-const LS_KEY = 'mercado_contatos';
+// ====== CONFIG SUPABASE ======
+const SUPABASE_URL = 'https://irmqtabhwoyccfjxstge.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_LloL7Ilv7ceXN8Ohj901VA_M9nQtYQp';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 const CATEGORIES = ['Mel','Leite','Ovos','Queijo','Carne','Banha','Ossos','Frutas e verduras','Outro'];
 
-function uid(){
-  return crypto.randomUUID ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2);
-}
-
-function load(){
-  try{ return JSON.parse(localStorage.getItem(LS_KEY)) || []; }
-  catch(e){ return []; }
-}
-function save(items){
-  localStorage.setItem(LS_KEY, JSON.stringify(items));
-}
-
-let items = load();
-
-/* preencher filtro de categorias */
-const categoryFilter = document.getElementById('categoryFilter');
-CATEGORIES.forEach(c=>{
-  const opt = document.createElement('option');
-  opt.value = c; opt.textContent = c;
-  categoryFilter.appendChild(opt);
-});
-
-const list = document.getElementById('list');
-const searchBox = document.getElementById('searchBox');
+const gateEl = document.getElementById('gate');
+const appEl = document.getElementById('app');
+const loadingEl = document.getElementById('loadingScreen');
 
 function escapeHtml(str){
   const d = document.createElement('div');
-  d.textContent = str;
+  d.textContent = str || '';
   return d.innerHTML;
 }
+
+// ====================================================================
+// GATE — decide o que mostrar: login, cadastro via convite, ou bloqueio
+// ====================================================================
+async function boot(){
+  loadingEl.style.display = 'block';
+  gateEl.style.display = 'none';
+  appEl.style.display = 'none';
+
+  const { data: { session } } = await sb.auth.getSession();
+
+  if(!session){
+    loadingEl.style.display = 'none';
+    const params = new URLSearchParams(window.location.search);
+    const convite = params.get('convite');
+    if(convite){
+      renderSignupGate(convite);
+    } else {
+      renderLoginGate();
+    }
+    return;
+  }
+
+  const { data: aprovado, error } = await sb.rpc('sou_aprovado');
+  if(error || !aprovado){
+    loadingEl.style.display = 'none';
+    renderBlockedGate();
+    return;
+  }
+
+  loadingEl.style.display = 'none';
+  gateEl.style.display = 'none';
+  appEl.style.display = 'block';
+  initApp();
+}
+
+function renderLoginGate(){
+  gateEl.style.display = 'flex';
+  gateEl.innerHTML = `
+    <h2>Mercado</h2>
+    <p class="sub">Acesso só por convite. Se você já tem conta, entre abaixo.</p>
+    <div class="field"><label>Email</label><input type="email" id="loginEmail"></div>
+    <div class="field"><label>Senha</label><input type="password" id="loginPass"></div>
+    <div id="gateError"></div>
+    <button class="primary" id="loginBtn">Entrar</button>
+  `;
+  document.getElementById('loginBtn').addEventListener('click', async ()=>{
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPass').value;
+    const errEl = document.getElementById('gateError');
+    errEl.style.display = 'none';
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    if(error){
+      errEl.textContent = 'Email ou senha incorretos.';
+      errEl.style.display = 'block';
+      return;
+    }
+    boot();
+  });
+}
+
+function renderSignupGate(token){
+  gateEl.style.display = 'flex';
+  gateEl.innerHTML = `<p class="sub">Verificando convite…</p>`;
+
+  sb.rpc('validar_convite', { p_token: token }).then(({ data: valido, error })=>{
+    if(error || !valido){
+      gateEl.innerHTML = `
+        <h2>Convite inválido</h2>
+        <p class="sub">Esse link já foi usado, expirou, ou não existe. Peça um novo convite presencialmente.</p>
+      `;
+      return;
+    }
+
+    gateEl.innerHTML = `
+      <h2>Criar acesso</h2>
+      <p class="sub">Convite válido. Crie seu login para acessar o catálogo.</p>
+      <div class="field"><label>Email</label><input type="email" id="suEmail"></div>
+      <div class="field"><label>Senha (mínimo 6 caracteres)</label><input type="password" id="suPass"></div>
+      <div id="gateError"></div>
+      <button class="primary" id="suBtn">Criar conta e entrar</button>
+    `;
+
+    document.getElementById('suBtn').addEventListener('click', async ()=>{
+      const email = document.getElementById('suEmail').value.trim();
+      const password = document.getElementById('suPass').value;
+      const errEl = document.getElementById('gateError');
+      errEl.style.display = 'none';
+
+      const { data: signUpData, error: signUpErr } = await sb.auth.signUp({ email, password });
+      if(signUpErr){
+        errEl.textContent = signUpErr.message;
+        errEl.style.display = 'block';
+        return;
+      }
+
+      // se "Confirm email" estiver ligado no projeto, não haverá sessão aqui ainda
+      if(!signUpData.session){
+        gateEl.innerHTML = `
+          <h2>Quase lá</h2>
+          <p class="sub">Confirme seu email pelo link que enviamos, depois volte
+          e entre normalmente na tela de login.</p>
+        `;
+        return;
+      }
+
+      const { data: confirmado, error: confErr } = await sb.rpc('confirmar_convite', { p_token: token });
+      if(confErr || !confirmado){
+        gateEl.innerHTML = `
+          <h2>Convite não confirmado</h2>
+          <p class="sub">Sua conta foi criada, mas o convite não pôde ser validado
+          (pode ter expirado nesse meio tempo). Fale com quem te convidou.</p>
+        `;
+        return;
+      }
+
+      boot();
+    });
+  });
+}
+
+function renderBlockedGate(){
+  gateEl.style.display = 'flex';
+  gateEl.innerHTML = `
+    <h2>Acesso pendente</h2>
+    <p class="sub">Sua conta existe, mas ainda não foi aprovada para ver o catálogo.
+    Fale com quem administra o Mercado.</p>
+    <button class="link" id="signOutBlocked">Sair</button>
+  `;
+  document.getElementById('signOutBlocked').addEventListener('click', async ()=>{
+    await sb.auth.signOut();
+    boot();
+  });
+}
+
+document.getElementById('logoutBtn')?.addEventListener('click', async ()=>{
+  await sb.auth.signOut();
+  boot();
+});
+
+// ====================================================================
+// APP — catálogo em si (agora lendo/escrevendo no Supabase)
+// ====================================================================
+let items = [];
+let realtimeChannel = null;
+
+function initApp(){
+  const categoryFilter = document.getElementById('categoryFilter');
+  categoryFilter.innerHTML = '<option value="">Todas as categorias</option>';
+  CATEGORIES.forEach(c=>{
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    categoryFilter.appendChild(opt);
+  });
+
+  document.getElementById('searchBox').addEventListener('input', render);
+  categoryFilter.addEventListener('change', render);
+  document.getElementById('openAdd').addEventListener('click', ()=> openModal(null));
+  document.getElementById('cancelItem').addEventListener('click', ()=> itemOverlay.classList.remove('open'));
+  document.getElementById('saveItem').addEventListener('click', saveItemHandler);
+  deleteItemBtn.addEventListener('click', deleteItemHandler);
+
+  loadItems();
+
+  // sincroniza em tempo real com o que outras pessoas aprovadas fizerem
+  if(realtimeChannel) sb.removeChannel(realtimeChannel);
+  realtimeChannel = sb
+    .channel('contatos-changes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'contatos' }, loadItems)
+    .subscribe();
+}
+
+async function loadItems(){
+  const { data, error } = await sb.from('contatos').select('*').order('name', { ascending: true });
+  if(!error) items = data;
+  render();
+}
+
+const list = document.getElementById('list');
+const searchBox = document.getElementById('searchBox');
+const categoryFilter = document.getElementById('categoryFilter');
 
 function render(){
   const term = searchBox.value.trim().toLowerCase();
@@ -323,10 +422,10 @@ function render(){
 
   const filtered = items.filter(it=>{
     const matchesCat = !cat || it.category === cat;
-    const haystack = (it.name+' '+it.contact+' '+it.address).toLowerCase();
+    const haystack = (it.name+' '+(it.contact||'')+' '+(it.address||'')).toLowerCase();
     const matchesTerm = !term || haystack.includes(term);
     return matchesCat && matchesTerm;
-  }).sort((a,b)=> a.name.localeCompare(b.name, 'pt-BR'));
+  });
 
   list.innerHTML = '';
 
@@ -367,20 +466,15 @@ function render(){
     b.addEventListener('click', ()=> openModal(b.dataset.edit));
   });
   list.querySelectorAll('[data-del]').forEach(b=>{
-    b.addEventListener('click', ()=> {
+    b.addEventListener('click', async ()=> {
       if(confirm('Excluir este contato?')){
-        items = items.filter(i=>i.id !== b.dataset.del);
-        save(items);
-        render();
+        await sb.from('contatos').delete().eq('id', b.dataset.del);
+        loadItems();
       }
     });
   });
 }
 
-searchBox.addEventListener('input', render);
-categoryFilter.addEventListener('change', render);
-
-/* ---------- modal ---------- */
 const itemOverlay = document.getElementById('itemOverlay');
 const modalTitle = document.getElementById('modalTitle');
 const fName = document.getElementById('fName');
@@ -398,9 +492,9 @@ function openModal(id){
     modalTitle.textContent = 'Editar contato';
     fName.value = it.name;
     fCategory.value = it.category;
-    fContact.value = it.contact;
-    fAddress.value = it.address;
-    fNotes.value = it.notes;
+    fContact.value = it.contact || '';
+    fAddress.value = it.address || '';
+    fNotes.value = it.notes || '';
     deleteItemBtn.style.display = 'inline-block';
   } else {
     modalTitle.textContent = 'Novo contato';
@@ -412,45 +506,37 @@ function openModal(id){
   fName.focus();
 }
 
-document.getElementById('openAdd').addEventListener('click', ()=> openModal(null));
-document.getElementById('cancelItem').addEventListener('click', ()=> itemOverlay.classList.remove('open'));
-
-document.getElementById('saveItem').addEventListener('click', ()=>{
+async function saveItemHandler(){
   const name = fName.value.trim();
   if(!name){ fName.focus(); return; }
 
+  const payload = {
+    name,
+    category: fCategory.value,
+    contact: fContact.value.trim(),
+    address: fAddress.value.trim(),
+    notes: fNotes.value.trim()
+  };
+
   if(editingId){
-    const it = items.find(i=>i.id===editingId);
-    it.name = name;
-    it.category = fCategory.value;
-    it.contact = fContact.value.trim();
-    it.address = fAddress.value.trim();
-    it.notes = fNotes.value.trim();
+    await sb.from('contatos').update(payload).eq('id', editingId);
   } else {
-    items.push({
-      id: uid(),
-      name,
-      category: fCategory.value,
-      contact: fContact.value.trim(),
-      address: fAddress.value.trim(),
-      notes: fNotes.value.trim()
-    });
+    await sb.from('contatos').insert(payload);
   }
-  save(items);
   itemOverlay.classList.remove('open');
-  render();
-});
+  loadItems();
+}
 
-deleteItemBtn.addEventListener('click', ()=>{
+async function deleteItemHandler(){
   if(editingId && confirm('Excluir este contato?')){
-    items = items.filter(i=>i.id !== editingId);
-    save(items);
+    await sb.from('contatos').delete().eq('id', editingId);
     itemOverlay.classList.remove('open');
-    render();
+    loadItems();
   }
-});
+}
 
-render();
+sb.auth.onAuthStateChange(()=> boot());
+boot();
 </script>
 </body>
 </html>
