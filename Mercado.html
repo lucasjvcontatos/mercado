@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mercado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F6F3EC;
+    --card: #FFFFFF;
+    --ink: #2B2A24;
+    --muted: #7A7565;
+    --line: #E4DFD1;
+    --green: #4B5D3A;
+    --green-dark: #384629;
+    --clay: #B5673A;
+    --radius: 12px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,.display{font-family:'Fraunces',serif;}
+
+  header.top{
+    padding:26px clamp(16px,4vw,40px) 20px;
+    border-bottom:1px solid var(--line);
+  }
+  header.top h1{
+    margin:0;
+    font-size:26px;
+    font-weight:600;
+    color:var(--green-dark);
+  }
+  header.top p{
+    margin:4px 0 0;
+    font-size:13.5px;
+    color:var(--muted);
+  }
+
+
+  header{
+    max-width:1100px;
+    margin:20px auto;
+    border-radius:20px;
+    overflow:hidden;
+}
+
+header img{
+    width:100%;
+    height:320px;
+    object-fit:cover;
+    display:block;
+}
+
+  main{
+    padding:22px clamp(16px,4vw,40px) 60px;
+    max-width:900px;
+    margin:0 auto;
+  }
+
+  .toolbar{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    align-items:center;
+    margin-bottom:18px;
+  }
+  input[type="text"], select{
+    font-family:'Inter',sans-serif;
+    font-size:13.5px;
+    padding:10px 12px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:#fff;
+    color:var(--ink);
+  }
+  #searchBox{flex:1;min-width:160px;}
+  #categoryFilter{min-width:160px;}
+
+  button{
+    font-family:'Inter',sans-serif;
+    cursor:pointer;
+    border:none;
+    border-radius:10px;
+    font-weight:600;
+    font-size:13.5px;
+  }
+  .btn-add{
+    background:var(--green);
+    color:#fff;
+    padding:10px 16px;
+  }
+  .btn-add:hover{background:var(--green-dark);}
+
+  .empty{
+    text-align:center;
+    color:var(--muted);
+    font-size:13.5px;
+    padding:60px 10px;
+    border:1.5px dashed var(--line);
+    border-radius:var(--radius);
+  }
+
+  .list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .item{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:14px 16px;
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .item .info{flex:1;min-width:0;}
+  .item .row1{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .item .name{
+    font-family:'Fraunces',serif;
+    font-size:16px;
+    font-weight:600;
+    color:var(--ink);
+  }
+  .tag{
+    font-size:11px;
+    font-weight:600;
+    padding:3px 9px;
+    border-radius:20px;
+    background:#EFEAD9;
+    color:var(--green-dark);
+    white-space:nowrap;
+  }
+  .item .meta{
+    margin-top:5px;
+    font-size:13px;
+    color:var(--muted);
+    line-height:1.5;
+  }
+  .item .meta b{color:var(--ink);font-weight:600;}
+  .item .obs{
+    margin-top:6px;
+    font-size:12.5px;
+    color:var(--clay);
+    font-style:italic;
+  }
+  .item-actions{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .item-actions button{
+    background:none;
+    padding:4px 8px;
+    font-size:12px;
+    color:var(--muted);
+  }
+  .item-actions button:hover{color:var(--green-dark);}
+
+  /* modal */
+  .overlay{
+    position:fixed;inset:0;
+    background:rgba(43,42,36,0.45);
+    display:none;
+    align-items:center;justify-content:center;
+    z-index:50;
+    padding:16px;
+  }
+  .overlay.open{display:flex;}
+  .modal{
+    background:#fff;
+    border-radius:16px;
+    padding:22px;
+    width:100%;
+    max-width:420px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .modal h3{margin:0;font-size:18px;color:var(--green-dark);}
+  .field label{
+    display:block;
+    font-size:12px;
+    font-weight:600;
+    color:var(--muted);
+    margin-bottom:4px;
+  }
+  .field input, .field select, .field textarea{
+    width:100%;
+    font-family:'Inter',sans-serif;
+  }
+  .field textarea{resize:vertical;min-height:56px;}
+  .modal-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    margin-top:4px;
+  }
+  .btn-cancel{background:none;color:var(--muted);padding:9px 12px;}
+  .btn-cancel:hover{color:var(--ink);}
+  .btn-save{background:var(--green);color:#fff;padding:9px 16px;}
+  .btn-save:hover{background:var(--green-dark);}
+  .btn-danger{background:none;color:#B5453A;padding:9px 12px;margin-right:auto;}
+  .btn-danger:hover{text-decoration:underline;}
+</style>
+</head>
+<body>
+
+<header class="top">
+
+  <img src="Imagens/imagemprincipal.png" alt="Logo">
+
+  <h1>Mercado</h1>
+  <p>Catálogo de gente de confiança que vende coisas da roça</p
+
+</header>
+
+<main>
+  <div class="toolbar">
+    <input type="text" id="searchBox" placeholder="Buscar por nome, contato ou região...">
+    <select id="categoryFilter">
+      <option value="">Todas as categorias</option>
+    </select>
+    <button class="btn-add" id="openAdd">+ Adicionar</button>
+  </div>
+
+  <div class="list" id="list"></div>
+</main>
+
+<!-- Modal: add/edit -->
+<div class="overlay" id="itemOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">Novo contato</h3>
+    <div class="field">
+      <label>Nome</label>
+      <input type="text" id="fName" placeholder="Ex: Seu Zé que vende mel">
+    </div>
+    <div class="field">
+      <label>Categoria</label>
+      <select id="fCategory">
+        <option value="Mel">Mel</option>
+        <option value="Leite">Leite</option>
+        <option value="Ovos">Ovos</option>
+        <option value="Queijo">Queijo / laticínios</option>
+        <option value="Carne">Carne</option>
+        <option value="Banha">Banha</option>
+        <option value="Ossos">Ossos (açougue)</option>
+        <option value="Frutas e verduras">Frutas e verduras</option>
+        <option value="Outro">Outro</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Contato (telefone/WhatsApp/Instagram)</label>
+      <input type="text" id="fContact" placeholder="(34) 9....">
+    </div>
+    <div class="field">
+      <label>Endereço / região</label>
+      <input type="text" id="fAddress" placeholder="Bairro, distrito, referência...">
+    </div>
+    <div class="field">
+      <label>Observações</label>
+      <textarea id="fNotes" placeholder="Ex: Detalhes, indicação de Marco, produto sem conservante, só vende aos sábados..."></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-danger" id="deleteItem" style="display:none;">Excluir</button>
+      <button class="btn-cancel" id="cancelItem">Cancelar</button>
+      <button class="btn-save" id="saveItem">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const LS_KEY = 'mercado_contatos';
+const CATEGORIES = ['Mel','Leite','Ovos','Queijo','Carne','Banha','Ossos','Frutas e verduras','Outro'];
+
+function uid(){
+  return crypto.randomUUID ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2);
+}
+
+function load(){
+  try{ return JSON.parse(localStorage.getItem(LS_KEY)) || []; }
+  catch(e){ return []; }
+}
+function save(items){
+  localStorage.setItem(LS_KEY, JSON.stringify(items));
+}
+
+let items = load();
+
+/* preencher filtro de categorias */
+const categoryFilter = document.getElementById('categoryFilter');
+CATEGORIES.forEach(c=>{
+  const opt = document.createElement('option');
+  opt.value = c; opt.textContent = c;
+  categoryFilter.appendChild(opt);
+});
+
+const list = document.getElementById('list');
+const searchBox = document.getElementById('searchBox');
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+function render(){
+  const term = searchBox.value.trim().toLowerCase();
+  const cat = categoryFilter.value;
+
+  const filtered = items.filter(it=>{
+    const matchesCat = !cat || it.category === cat;
+    const haystack = (it.name+' '+it.contact+' '+it.address).toLowerCase();
+    const matchesTerm = !term || haystack.includes(term);
+    return matchesCat && matchesTerm;
+  }).sort((a,b)=> a.name.localeCompare(b.name, 'pt-BR'));
+
+  list.innerHTML = '';
+
+  if(filtered.length === 0){
+    const empty = document.createElement('div');
+    empty.className = 'empty';
+    empty.textContent = items.length === 0
+      ? 'Nenhum contato ainda. Clique em "+ Adicionar" para começar seu catálogo.'
+      : 'Nenhum contato encontrado com esse filtro.';
+    list.appendChild(empty);
+    return;
+  }
+
+  filtered.forEach(it=>{
+    const row = document.createElement('div');
+    row.className = 'item';
+    row.innerHTML = `
+      <div class="info">
+        <div class="row1">
+          <span class="name">${escapeHtml(it.name)}</span>
+          <span class="tag">${escapeHtml(it.category)}</span>
+        </div>
+        <div class="meta">
+          ${it.contact ? `<b>Contato:</b> ${escapeHtml(it.contact)}<br>` : ''}
+          ${it.address ? `<b>Onde:</b> ${escapeHtml(it.address)}` : ''}
+        </div>
+        ${it.notes ? `<div class="obs">${escapeHtml(it.notes)}</div>` : ''}
+      </div>
+      <div class="item-actions">
+        <button data-edit="${it.id}" title="Editar">✎ Editar</button>
+        <button data-del="${it.id}" title="Excluir">✕ Excluir</button>
+      </div>
+    `;
+    list.appendChild(row);
+  });
+
+  list.querySelectorAll('[data-edit]').forEach(b=>{
+    b.addEventListener('click', ()=> openModal(b.dataset.edit));
+  });
+  list.querySelectorAll('[data-del]').forEach(b=>{
+    b.addEventListener('click', ()=> {
+      if(confirm('Excluir este contato?')){
+        items = items.filter(i=>i.id !== b.dataset.del);
+        save(items);
+        render();
+      }
+    });
+  });
+}
+
+searchBox.addEventListener('input', render);
+categoryFilter.addEventListener('change', render);
+
+/* ---------- modal ---------- */
+const itemOverlay = document.getElementById('itemOverlay');
+const modalTitle = document.getElementById('modalTitle');
+const fName = document.getElementById('fName');
+const fCategory = document.getElementById('fCategory');
+const fContact = document.getElementById('fContact');
+const fAddress = document.getElementById('fAddress');
+const fNotes = document.getElementById('fNotes');
+const deleteItemBtn = document.getElementById('deleteItem');
+let editingId = null;
+
+function openModal(id){
+  editingId = id || null;
+  if(id){
+    const it = items.find(i=>i.id===id);
+    modalTitle.textContent = 'Editar contato';
+    fName.value = it.name;
+    fCategory.value = it.category;
+    fContact.value = it.contact;
+    fAddress.value = it.address;
+    fNotes.value = it.notes;
+    deleteItemBtn.style.display = 'inline-block';
+  } else {
+    modalTitle.textContent = 'Novo contato';
+    fName.value = ''; fCategory.value = CATEGORIES[0];
+    fContact.value = ''; fAddress.value = ''; fNotes.value = '';
+    deleteItemBtn.style.display = 'none';
+  }
+  itemOverlay.classList.add('open');
+  fName.focus();
+}
+
+document.getElementById('openAdd').addEventListener('click', ()=> openModal(null));
+document.getElementById('cancelItem').addEventListener('click', ()=> itemOverlay.classList.remove('open'));
+
+document.getElementById('saveItem').addEventListener('click', ()=>{
+  const name = fName.value.trim();
+  if(!name){ fName.focus(); return; }
+
+  if(editingId){
+    const it = items.find(i=>i.id===editingId);
+    it.name = name;
+    it.category = fCategory.value;
+    it.contact = fContact.value.trim();
+    it.address = fAddress.value.trim();
+    it.notes = fNotes.value.trim();
+  } else {
+    items.push({
+      id: uid(),
+      name,
+      category: fCategory.value,
+      contact: fContact.value.trim(),
+      address: fAddress.value.trim(),
+      notes: fNotes.value.trim()
+    });
+  }
+  save(items);
+  itemOverlay.classList.remove('open');
+  render();
+});
+
+deleteItemBtn.addEventListener('click', ()=>{
+  if(editingId && confirm('Excluir este contato?')){
+    items = items.filter(i=>i.id !== editingId);
+    save(items);
+    itemOverlay.classList.remove('open');
+    render();
+  }
+});
+
+render();
+</script>
+</body>
+</html>
